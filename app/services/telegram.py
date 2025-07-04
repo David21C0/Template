@@ -7,7 +7,7 @@ def send_telegram_message(chat_id: int, text: str):
     url = f"{BASE_URL}/sendMessage"
     payload = {
         "chat_id": chat_id,
-        "text": texto
+        "text": text
     }
 
    # print(f"[DEBUG] Enviando a chat_id={chat_id} el texto: {texto}")
