@@ -3,7 +3,7 @@ import os
 BOT_TOKEN =  os.getenv("TELEGRAM_KEY")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-def send_telegram_message(chat_id: int, texto: str):
+def send_telegram_message(chat_id: int, text: str):
     url = f"{BASE_URL}/sendMessage"
     payload = {
         "chat_id": chat_id,
