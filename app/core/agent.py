@@ -31,7 +31,7 @@ llm = ChatOpenAI(
 
 #TODO: Baja prioridad, validar si puede ejecutar varios tools a la vez, por ejemplo si el usuario pide ver los departamentos y las zonas comunes, que pueda ejecutar ambas tools y no una sola.
 tools = [
-   # Tool.from_function(proyecto_por_distrito, name="proyecto_por_distrito", description="Informacion basica de proyecto filtrado por distrito."),
+    Tool.from_function(proyecto_por_distrito, name="proyecto_por_distrito", description="Informacion basica de proyecto filtrado por distrito."),
    # Tool.from_function(detalles_proyecto, name="detalles_proyecto", description="Detalles del proyecto y mas informacion filtrado por nombre del proyecto."),
    # Tool.from_function(propiedades_disponibles, name="propiedades_disponibles", description="Propiedades por proyecto se filtra por nombre del proyecto."),
    #Tool.from_function(precio_propiedades, name="precio_propiedades", description="Detalle de precios y promociones de propiedades se filtra por nombre del proyecto."),
@@ -59,7 +59,7 @@ def get_agent(phone: str):
     }
 
     return initialize_agent(
-       # tools=tools,
+        tools=tools,
         llm=llm,
         agent=AgentType.OPENAI_FUNCTIONS,
         verbose=True,
