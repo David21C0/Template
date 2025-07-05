@@ -41,12 +41,20 @@ class Photo(BaseModel):
     height: int
     file_size: Optional[int] = None
 
-# Modelo para audios
+# Modelo para archivos de audio
 class Audio(BaseModel):
     file_id: str
     file_unique_id: str
     duration: int
     file_name: Optional[str] = None
+    mime_type: Optional[str] = None
+    file_size: Optional[int] = None
+
+# Modelo para mensajes de voz grabados en la app de Telegram
+class Voice(BaseModel):
+    file_id: str
+    file_unique_id: str
+    duration: int
     mime_type: Optional[str] = None
     file_size: Optional[int] = None
 
@@ -56,6 +64,7 @@ class Message(BaseModel):
     text: Optional[str] = None
     photo: Optional[List[Photo]] = None
     audio: Optional[Audio] = None
+    voice: Optional[Voice] = None
 
     class Config:
         extra = "ignore"  # Ignora otros campos como chat, date, etc.
@@ -75,9 +84,10 @@ async def recibir_mensaje(update: TelegramUpdate):
     user_text = update.message.text
     photo = update.message.photo
     audio = update.message.audio
+    voice = update.message.voice
 
     logger.info(f"Mensaje recibido de usuario {user_id}")
-    logger.info(f"Tipo de contenido: texto={user_text is not None}, foto={photo is not None}, audio={audio is not None}")
+    logger.info(f"Tipo de contenido: texto={user_text is not None}, foto={photo is not None}, audio={audio is not None}, voice={voice is not None}")
 
     agent = get_agent(user_id)
     
@@ -86,10 +96,14 @@ async def recibir_mensaje(update: TelegramUpdate):
         # Si hay foto, el agente debe responder sobre la imagen
         logger.info(f"Imagen recibida - File ID: {photo[0].file_id if photo else 'N/A'}")
         response = agent.run("imagen recibida")
+    elif voice:
+        # Si hay mensaje de voz grabado en la app, el agente debe responder sobre el voice
+        logger.info(f"Mensaje de voz recibido - File ID: {voice.file_id}, Duración: {voice.duration}s")
+        response = agent.run("mensaje de voz recibido")
     elif audio:
-        # Si hay audio, el agente debe responder sobre el audio
-        logger.info(f"Audio recibido - File ID: {audio.file_id}, Duración: {audio.duration}s")
-        response = agent.run("audio recibido")
+        # Si hay archivo de audio, el agente debe responder sobre el audio
+        logger.info(f"Archivo de audio recibido - File ID: {audio.file_id}, Duración: {audio.duration}s")
+        response = agent.run("archivo de audio recibido")
     elif user_text:
         # Si hay texto, procesar normalmente
         logger.info(f"Texto recibido: {user_text}")

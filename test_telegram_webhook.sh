@@ -37,7 +37,7 @@ curl -X POST http://localhost:8000/webhook \
     }
   }'
 
-echo -e "\n\nProbando el webhook con audio..."
+echo -e "\n\nProbando el webhook con archivo de audio..."
 curl -X POST http://localhost:8000/webhook \
   -H "Content-Type: application/json" \
   -d '{
@@ -49,9 +49,27 @@ curl -X POST http://localhost:8000/webhook \
         "file_id": "test_audio_id",
         "file_unique_id": "unique_audio_id",
         "duration": 30,
-        "file_name": "audio_message.ogg",
-        "mime_type": "audio/ogg",
+        "file_name": "audio_message.mp3",
+        "mime_type": "audio/mpeg",
         "file_size": 512000
+      }
+    }
+  }'
+
+echo -e "\n\nProbando el webhook con mensaje de voz grabado en la app..."
+curl -X POST http://localhost:8000/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": {
+      "from": {
+        "id": 123456789
+      },
+      "voice": {
+        "file_id": "test_voice_id",
+        "file_unique_id": "unique_voice_id",
+        "duration": 15,
+        "mime_type": "audio/ogg",
+        "file_size": 256000
       }
     }
   }'

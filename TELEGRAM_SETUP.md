@@ -23,9 +23,16 @@ El webhook ahora maneja la siguiente estructura de datos de Telegram:
       "file_id": "id_del_audio",
       "file_unique_id": "id_unico_audio",
       "duration": 30,
-      "file_name": "audio.ogg",
-      "mime_type": "audio/ogg",
+      "file_name": "cancion.mp3",
+      "mime_type": "audio/mpeg",
       "file_size": 512000
+    },
+    "voice": {
+      "file_id": "id_del_voice",
+      "file_unique_id": "id_unico_voice",
+      "duration": 15,
+      "mime_type": "audio/ogg",
+      "file_size": 256000
     }
   }
 }
@@ -56,10 +63,11 @@ file_info = get_file_info("file_id")
 # Descargar un archivo
 file_content = download_file("file_id", "ruta_guardado.jpg")
 ```
+
 ## Próximas Mejoras
 
 - [ ] Soporte para videos
 - [ ] Soporte para documentos
 - [ ] Análisis de contenido de imágenes con IA
-- [ ] Transcripción de audios
+- [ ] Transcripción de audios y mensajes de voz
 - [ ] Respuestas más contextuales basadas en el contenido multimedia 
