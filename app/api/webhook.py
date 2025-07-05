@@ -7,6 +7,13 @@ from app.services.sender import send_image_message
 
 from pydantic import BaseModel, Field
 from app.services.telegram import send_telegram_message
+#TODO averiguar logging typing 
+from typing import List, Optional
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -19,10 +26,36 @@ async def health_check():
 class From(BaseModel):
     id: int
 
+# Modelo para archivos de Telegram (fotos, audios, etc.)
+class TelegramFile(BaseModel):
+    file_id: str
+    file_unique_id: str
+    file_size: Optional[int] = None
+    file_path: Optional[str] = None
+
+# Modelo para fotos
+class Photo(BaseModel):
+    file_id: str
+    file_unique_id: str
+    width: int
+    height: int
+    file_size: Optional[int] = None
+
+# Modelo para audios
+class Audio(BaseModel):
+    file_id: str
+    file_unique_id: str
+    duration: int
+    file_name: Optional[str] = None
+    mime_type: Optional[str] = None
+    file_size: Optional[int] = None
+
 # Modelo que representa el mensaje que llega desde Telegram
 class Message(BaseModel):
     from_: From = Field(..., alias="from", repr=False)
-    text: str
+    text: Optional[str] = None
+    photo: Optional[List[Photo]] = None
+    audio: Optional[Audio] = None
 
     class Config:
         extra = "ignore"  # Ignora otros campos como chat, date, etc.
@@ -40,13 +73,36 @@ class TelegramUpdate(BaseModel):
 async def recibir_mensaje(update: TelegramUpdate):
     user_id = update.message.from_.id
     user_text = update.message.text
+    photo = update.message.photo
+    audio = update.message.audio
+
+    logger.info(f"Mensaje recibido de usuario {user_id}")
+    logger.info(f"Tipo de contenido: texto={user_text is not None}, foto={photo is not None}, audio={audio is not None}")
 
     agent = get_agent(user_id)
-    response = agent.run(user_text)
+    
+    # Determinar el tipo de contenido recibido
+    if photo:
+        # Si hay foto, el agente debe responder sobre la imagen
+        logger.info(f"Imagen recibida - File ID: {photo[0].file_id if photo else 'N/A'}")
+        response = agent.run("imagen recibida")
+    elif audio:
+        # Si hay audio, el agente debe responder sobre el audio
+        logger.info(f"Audio recibido - File ID: {audio.file_id}, Duración: {audio.duration}s")
+        response = agent.run("audio recibido")
+    elif user_text:
+        # Si hay texto, procesar normalmente
+        logger.info(f"Texto recibido: {user_text}")
+        response = agent.run(user_text)
+    else:
+        # Si no hay contenido reconocido
+        logger.warning("Tipo de contenido no reconocido")
+        response = "No pude identificar el tipo de contenido enviado."
 
     if not response:
         response = "No pude procesar tu mensaje. Por favor, intenta de nuevo más tarde."
-        
+ #TODO averiguar logger
+    logger.info(f"Respuesta del agente: {response}")
     send_telegram_message(chat_id=user_id, text=response)
 
     return {"status": "ok", "resultado": response}
