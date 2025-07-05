@@ -6,10 +6,12 @@ import os
 from app.services.sender import send_image_message
 
 from pydantic import BaseModel, Field
-from app.services.telegram import send_telegram_message
+from app.services.telegram import send_telegram_message, download_file
 #TODO averiguar logging typing 
 from typing import List, Optional
 import logging
+import os
+from datetime import datetime
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -77,6 +79,13 @@ class TelegramUpdate(BaseModel):
     class Config:
         extra = "ignore"
 
+def ensure_downloads_directory():
+    """Asegura que existe el directorio de descargas"""
+    downloads_dir = "downloads"
+    if not os.path.exists(downloads_dir):
+        os.makedirs(downloads_dir)
+    return downloads_dir
+
 # Endpoint que recibe el webhook de Telegram
 @router.post("/webhook")
 async def recibir_mensaje(update: TelegramUpdate):
@@ -96,14 +105,48 @@ async def recibir_mensaje(update: TelegramUpdate):
         # Si hay foto, el agente debe responder sobre la imagen
         logger.info(f"Imagen recibida - File ID: {photo[0].file_id if photo else 'N/A'}")
         response = agent.run("imagen recibida")
+        
     elif voice:
         # Si hay mensaje de voz grabado en la app, el agente debe responder sobre el voice
         logger.info(f"Mensaje de voz recibido - File ID: {voice.file_id}, Duración: {voice.duration}s")
+        
+        # Descargar el archivo de voz
+        downloads_dir = ensure_downloads_directory()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        voice_filename = f"voice_{user_id}_{timestamp}.ogg"
+        voice_path = os.path.join(downloads_dir, voice_filename)
+        
+        voice_content = download_file(voice.file_id, voice_path)
+        if voice_content:
+            logger.info(f"Mensaje de voz descargado exitosamente: {voice_path}")
+        else:
+            logger.error(f"No se pudo descargar el mensaje de voz: {voice.file_id}")
+        
         response = agent.run("mensaje de voz recibido")
+        
     elif audio:
         # Si hay archivo de audio, el agente debe responder sobre el audio
         logger.info(f"Archivo de audio recibido - File ID: {audio.file_id}, Duración: {audio.duration}s")
+        
+        # Descargar el archivo de audio
+        downloads_dir = ensure_downloads_directory()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        if audio.file_name:
+            audio_filename = f"audio_{user_id}_{timestamp}_{audio.file_name}"
+        else:
+            audio_filename = f"audio_{user_id}_{timestamp}.mp3"
+        
+        audio_path = os.path.join(downloads_dir, audio_filename)
+        
+        audio_content = download_file(audio.file_id, audio_path)
+        if audio_content:
+            logger.info(f"Archivo de audio descargado exitosamente: {audio_path}")
+        else:
+            logger.error(f"No se pudo descargar el archivo de audio: {audio.file_id}")
+        
         response = agent.run("archivo de audio recibido")
+        
     elif user_text:
         # Si hay texto, procesar normalmente
         logger.info(f"Texto recibido: {user_text}")
