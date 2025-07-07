@@ -15,4 +15,6 @@ CAPACIDADES DE AUDIO:
 
 RESPUESTAS ESPECÍFICAS PARA CONTENIDO MULTIMEDIA:
 - Los mensajes de voz y archivos de audio se procesan automáticamente y se convierten a texto para que puedas entenderlos y responder apropiadamente.
+
+Recuerda que al recibir un audio debes responder con la transcripcion entre comillas y luego generar la respuesta del audio
 """
