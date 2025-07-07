@@ -7,6 +7,7 @@ from app.services.sender import send_image_message
 
 from pydantic import BaseModel, Field
 from app.services.telegram import send_telegram_message, download_file
+from app.services.audio_processor import audio_processor
 #TODO averiguar logging typing 
 from typing import List, Optional
 import logging
@@ -86,6 +87,39 @@ def ensure_downloads_directory():
         os.makedirs(downloads_dir)
     return downloads_dir
 
+def process_audio_with_ai(audio_path: str, user_id: int, is_voice_message: bool = False) -> str:
+    """
+    Procesa un archivo de audio con IA y retorna la transcripción
+    
+    Args:
+        audio_path: Ruta al archivo de audio
+        user_id: ID del usuario
+        is_voice_message: Si es un mensaje de voz (True) o archivo de audio (False)
+        
+    Returns:
+        Texto transcrito o mensaje de error
+    """
+    try:
+        logger.info(f"Iniciando procesamiento de audio con IA para usuario {user_id}")
+        
+        # Procesar el audio según el tipo
+        if is_voice_message:
+            success, result = audio_processor.process_voice_message(audio_path, user_id)
+        else:
+            success, result = audio_processor.process_audio_file(audio_path, user_id)
+        
+        if success:
+            logger.info(f"Transcripción exitosa para usuario {user_id}: '{result[:50]}...'")
+            return result
+        else:
+            logger.error(f"Error en transcripción para usuario {user_id}: {result}")
+            return f"Error al procesar el audio: {result}"
+            
+    except Exception as e:
+        error_msg = f"Error inesperado en procesamiento de audio: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
 # Endpoint que recibe el webhook de Telegram
 @router.post("/webhook")
 async def recibir_mensaje(update: TelegramUpdate):
@@ -107,7 +141,7 @@ async def recibir_mensaje(update: TelegramUpdate):
         response = agent.run("imagen recibida")
         
     elif voice:
-        # Si hay mensaje de voz grabado en la app, el agente debe responder sobre el voice
+        # Si hay mensaje de voz grabado en la app, procesar con IA
         logger.info(f"Mensaje de voz recibido - File ID: {voice.file_id}, Duración: {voice.duration}s")
         
         # Descargar el archivo de voz
@@ -119,13 +153,23 @@ async def recibir_mensaje(update: TelegramUpdate):
         voice_content = download_file(voice.file_id, voice_path)
         if voice_content:
             logger.info(f"Mensaje de voz descargado exitosamente: {voice_path}")
+            
+            # Procesar con IA para transcribir
+            transcription = process_audio_with_ai(voice_path, user_id, is_voice_message=True)
+            
+            if transcription and not transcription.startswith("Error"):
+                # Pasar la transcripción al agente
+                logger.info(f"Enviando transcripción al agente: '{transcription[:50]}...'")
+                response = agent.run(transcription)
+            else:
+                # Si hay error en transcripción, responder apropiadamente
+                response = f"No pude entender tu mensaje de voz. {transcription}"
         else:
             logger.error(f"No se pudo descargar el mensaje de voz: {voice.file_id}")
-        
-        response = agent.run("mensaje de voz recibido")
+            response = "No pude procesar tu mensaje de voz. Por favor, intenta de nuevo."
         
     elif audio:
-        # Si hay archivo de audio, el agente debe responder sobre el audio
+        # Si hay archivo de audio, procesar con IA
         logger.info(f"Archivo de audio recibido - File ID: {audio.file_id}, Duración: {audio.duration}s")
         
         # Descargar el archivo de audio
@@ -142,10 +186,20 @@ async def recibir_mensaje(update: TelegramUpdate):
         audio_content = download_file(audio.file_id, audio_path)
         if audio_content:
             logger.info(f"Archivo de audio descargado exitosamente: {audio_path}")
+            
+            # Procesar con IA para transcribir
+            transcription = process_audio_with_ai(audio_path, user_id, is_voice_message=False)
+            
+            if transcription and not transcription.startswith("Error"):
+                # Pasar la transcripción al agente
+                logger.info(f"Enviando transcripción al agente: '{transcription[:50]}...'")
+                response = agent.run(transcription)
+            else:
+                # Si hay error en transcripción, responder apropiadamente
+                response = f"No pude procesar el contenido de audio. {transcription}"
         else:
             logger.error(f"No se pudo descargar el archivo de audio: {audio.file_id}")
-        
-        response = agent.run("archivo de audio recibido")
+            response = "No pude procesar tu archivo de audio. Por favor, intenta de nuevo."
         
     elif user_text:
         # Si hay texto, procesar normalmente
