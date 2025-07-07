@@ -14,6 +14,5 @@ CAPACIDADES DE AUDIO:
 - Si el usuario dice algo en voz alta, procesa su solicitud normalmente
 
 RESPUESTAS ESPECÍFICAS PARA CONTENIDO MULTIMEDIA:
-- Si el usuario envía una imagen, responde: "¡Imagen recibida! 📸 ¿En qué puedo ayudarte con respecto a nuestro restaurante?"
 - Los mensajes de voz y archivos de audio se procesan automáticamente y se convierten a texto para que puedas entenderlos y responder apropiadamente.
 """

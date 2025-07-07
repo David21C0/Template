@@ -158,9 +158,10 @@ async def recibir_mensaje(update: TelegramUpdate):
             transcription = process_audio_with_ai(voice_path, user_id, is_voice_message=True)
             
             if transcription and not transcription.startswith("Error"):
-                # Pasar la transcripción al agente
+                # Pasar la transcripción al agente y formatear la respuesta
                 logger.info(f"Enviando transcripción al agente: '{transcription[:50]}...'")
-                response = agent.run(transcription)
+                agent_response = agent.run(transcription)
+                response = f'"{transcription}" : {agent_response}'
             else:
                 # Si hay error en transcripción, responder apropiadamente
                 response = f"No pude entender tu mensaje de voz. {transcription}"
@@ -191,9 +192,10 @@ async def recibir_mensaje(update: TelegramUpdate):
             transcription = process_audio_with_ai(audio_path, user_id, is_voice_message=False)
             
             if transcription and not transcription.startswith("Error"):
-                # Pasar la transcripción al agente
+                # Pasar la transcripción al agente y formatear la respuesta
                 logger.info(f"Enviando transcripción al agente: '{transcription[:50]}...'")
-                response = agent.run(transcription)
+                agent_response = agent.run(transcription)
+                response = f'"{transcription}" : {agent_response}'
             else:
                 # Si hay error en transcripción, responder apropiadamente
                 response = f"No pude procesar el contenido de audio. {transcription}"
