@@ -20,3 +20,4 @@ python-telegram-bot
 # Dependencias para procesamiento de audio
 pydub
 ffmpeg-python
+supabase
