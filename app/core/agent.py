@@ -7,13 +7,7 @@ from app.db.mongo import MongoChatMessageHistory
 from langchain.prompts import MessagesPlaceholder
 from app.core.prompts import SYSTEM_PROMPT
 from app.core.tools import (
-    proyecto_por_distrito,
-    detalles_proyecto,
-    propiedades_disponibles,
-    precio_propiedades,
-    imagenes_proyecto_zonas_comunes,
-    imagenes_propiedades,
-    obtener_proyectos
+  buscar_nombre_cliente
 )
 import os
 import json
@@ -31,13 +25,7 @@ llm = ChatOpenAI(
 
 #TODO: Baja prioridad, validar si puede ejecutar varios tools a la vez, por ejemplo si el usuario pide ver los departamentos y las zonas comunes, que pueda ejecutar ambas tools y no una sola.
 tools = [
-    Tool.from_function(proyecto_por_distrito, name="proyecto_por_distrito", description="Informacion basica de proyecto filtrado por distrito."),
-   # Tool.from_function(detalles_proyecto, name="detalles_proyecto", description="Detalles del proyecto y mas informacion filtrado por nombre del proyecto."),
-   # Tool.from_function(propiedades_disponibles, name="propiedades_disponibles", description="Propiedades por proyecto se filtra por nombre del proyecto."),
-   #Tool.from_function(precio_propiedades, name="precio_propiedades", description="Detalle de precios y promociones de propiedades se filtra por nombre del proyecto."),
-   # Tool.from_function(imagenes_proyecto_zonas_comunes, name="imagenes_proyecto_zonas_comunes", description="Imágenes de las zonas comunes del proyecto se filtra por nombre del proyecto."),
-   # Tool.from_function(imagenes_propiedades, name="imagenes_propiedades", description="Imágenes de propiedades el unico filtro que contiene es por nombre del proyecto y deveulve todas las imagenes de las propiedades asociadas."),
-   # Tool.from_function(obtener_proyectos, name="obtener_proyectos", description="Proyectos sin distrito específico para mostrar todas los proyecto disponibles y en que distritos.")
+    Tool.from_function(buscar_nombre_cliente, name="buscar_nombre_cliente", description="Busca el nombre completo de un cliente en Supabase usando coincidencia parcial en la columna full_name. El input es parte o todo el nombre del cliente."),
 ]
 
 
