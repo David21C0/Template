@@ -6,7 +6,7 @@ from app.db.respositories import PostgresDB
 import time
 import re
 import os
-from supabase import create_client, Client
+from app.db.supabase import get_supabase_client
 
 user_state = {field: None for field, _ in question_list}
 
@@ -20,12 +20,7 @@ def get_next_question(input: str) -> str:
     return "¡Gracias! Ya tenemos toda la información necesaria. Un asesor te contactará pronto."
 
 
-def get_supabase_client() -> Client:
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
-    if not url or not key:
-        raise ValueError("SUPABASE_URL o SUPABASE_KEY no están configurados en el entorno.")
-    return create_client(url, key)
+
 
 @tool
 def buscar_nombre_cliente(input: str) -> str:
